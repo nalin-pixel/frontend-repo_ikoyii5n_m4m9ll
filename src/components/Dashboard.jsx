@@ -3,6 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileCheck, Link2, Shield, Loader2 } from 'lucide-react';
 import WorkTimeline from './WorkTimeline';
 
+function persistUpload(payload) {
+  try {
+    const key = 'chainfolio_uploads';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const next = [payload, ...existing].slice(0, 200);
+    localStorage.setItem(key, JSON.stringify(next));
+    // Broadcast for other tabs/components
+    const evt = new CustomEvent('chainfolio:event', { detail: { type: 'REGISTERED_WORK', payload } });
+    window.dispatchEvent(evt);
+  } catch {}
+}
+
 export default function Dashboard() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -13,8 +25,21 @@ export default function Dashboard() {
     setSubmitting(true);
     // Mock upload to IPFS + register to Story Protocol (placeholder behaviors for now)
     await new Promise((r) => setTimeout(r, 1200));
+
+    const payload = {
+      id: crypto.randomUUID(),
+      title: form.title,
+      type: form.type,
+      license: form.license,
+      url: form.url?.trim() || '',
+      fileName: form.file?.name || '',
+      createdAt: Date.now(),
+    };
+    persistUpload(payload);
+
     setOpen(true);
     setSubmitting(false);
+    setForm({ title: '', type: 'art', file: null, license: 'cc-by', url: '' });
   };
 
   return (
