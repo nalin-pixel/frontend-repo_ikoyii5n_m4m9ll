@@ -1,75 +1,78 @@
-import { motion } from 'framer-motion';
-import { Rocket, ShieldCheck, Wallet, LogOut } from 'lucide-react';
-import { useMetamask } from './useMetamask';
-
-function shortAddress(addr) {
-  if (!addr) return '';
-  return addr.slice(0, 6) + '...' + addr.slice(-4);
-}
+import { useEffect, useState } from 'react';
+import { Wallet, LogOut } from 'lucide-react';
 
 export default function Navbar() {
-  const { hasProvider, account, connecting, connect, disconnect } = useMetamask();
+  const [account, setAccount] = useState(null);
+  const [connecting, setConnecting] = useState(false);
+
+  useEffect(() => {
+    // Listen for account changes if MetaMask is present
+    if (window.ethereum) {
+      const handler = (accounts) => {
+        setAccount(accounts && accounts.length ? accounts[0] : null);
+      };
+      window.ethereum.on('accountsChanged', handler);
+      return () => window.ethereum.removeListener('accountsChanged', handler);
+    }
+  }, []);
+
+  const connect = async () => {
+    try {
+      setConnecting(true);
+      if (!window.ethereum) {
+        alert('MetaMask not detected. Please install it to connect.');
+        return;
+      }
+      // Explicitly request permission and accounts (no auto-reconnect)
+      await window.ethereum.request({
+        method: 'wallet_requestPermissions',
+        params: [{ eth_accounts: {} }],
+      });
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      setAccount(accounts[0]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const disconnect = () => {
+    // Clear local state only; user can reconnect explicitly
+    setAccount(null);
+  };
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur supports-[backdrop-filter]:bg-black/30 border-b border-white/10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <motion.a
-            href="#"
-            className="flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <div className="relative h-8 w-8 rounded-xl bg-gradient-to-br from-cyan-500/60 to-indigo-600/60 shadow-lg shadow-cyan-500/20 ring-1 ring-white/20 grid place-items-center">
-              <Rocket className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight text-white">ChainFolio</span>
-          </motion.a>
-
-          <nav className="hidden md:flex items-center gap-8 text-sm">
-            <a href="#explore" className="text-white/80 hover:text-white transition">Explore</a>
-            <a href="#how" className="text-white/80 hover:text-white transition">How it works</a>
-            <a href="#dashboard" className="text-white/80 hover:text-white transition">Dashboard</a>
-          </nav>
-
-          {!hasProvider ? (
-            <span className="rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">Install MetaMask</span>
-          ) : account ? (
-            <div className="flex items-center gap-2">
-              <span className="hidden sm:inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1.5 text-sm text-emerald-200">
-                {shortAddress(account)}
-              </span>
-              <motion.button
-                onClick={disconnect}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-sm text-white hover:bg-white/10"
-                whileTap={{ scale: 0.98 }}
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Disconnect</span>
-              </motion.button>
-            </div>
-          ) : (
-            <motion.button
-              onClick={connect}
-              disabled={connecting}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 disabled:opacity-60"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              aria-label={connecting ? 'Connecting' : 'Connect wallet'}
-            >
-              <Wallet className="h-4 w-4" />
-              {connecting ? 'Connecting…' : 'Connect Wallet'}
-            </motion.button>
-          )}
+    <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/30 border-b border-white/10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500" />
+          <span className="text-white font-semibold tracking-tight">ChainFolio</span>
         </div>
 
-        <div className="md:hidden mt-3 mb-3 flex items-center gap-4 text-sm">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-white/80">
-            <ShieldCheck className="h-3.5 w-3.5 text-cyan-300" />
-            On-chain verified profiles
-          </span>
+        <nav className="hidden md:flex items-center gap-6 text-sm text-white/80">
+          <a href="#explore" className="hover:text-white transition-colors">Explore</a>
+          <a href="#dashboard" className="hover:text-white transition-colors">Dashboard</a>
+          <a href="#about" className="hover:text-white transition-colors">About</a>
+        </nav>
+
+        <div className="flex items-center gap-3">
+          {account ? (
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:block text-white/80 text-sm max-w-[140px] truncate">
+                {account}
+              </span>
+              <button onClick={disconnect} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 bg-white/10 hover:bg-white/15 text-white text-sm border border-white/10 transition-colors">
+                <LogOut size={16} />
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <button onClick={connect} disabled={connecting} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white text-sm font-medium shadow-lg shadow-violet-500/20 disabled:opacity-60">
+              <Wallet size={16} />
+              {connecting ? 'Connecting…' : 'Connect Wallet'}
+            </button>
+          )}
         </div>
       </div>
     </header>

@@ -1,35 +1,30 @@
-import React, { useEffect } from 'react';
-import Navbar from './components/Navbar.jsx';
-import Hero from './components/Hero.jsx';
-import ExploreGrid from './components/ExploreGrid.jsx';
-import Dashboard from './components/Dashboard.jsx';
-import Profile from './components/Profile.jsx';
+import { useEffect } from 'react';
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import ExploreGrid from './components/ExploreGrid';
+import Dashboard from './components/Dashboard';
+
+function useTheme() {
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('bg-neutral-950');
+  }, []);
+}
 
 export default function App() {
-  // Bridge: when a registration succeeds, persist to localStorage so Profile can render history
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.detail?.type === 'REGISTERED_WORK') {
-        const storeKey = 'chainfolio_uploads';
-        const existing = JSON.parse(localStorage.getItem(storeKey) || '[]');
-        const next = [e.detail.payload, ...existing].slice(0, 200);
-        localStorage.setItem(storeKey, JSON.stringify(next));
-      }
-    };
-    window.addEventListener('chainfolio:event', handler);
-    return () => window.removeEventListener('chainfolio:event', handler);
-  }, []);
-
+  useTheme();
   return (
-    <div className="min-h-screen bg-neutral-950 text-white">
+    <div className="min-h-screen text-white">
       <Navbar />
-      <main className="relative">
+      <main className="pt-16">
         <Hero />
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
-          <ExploreGrid />
-          <Dashboard />
-          <Profile />
-        </section>
+        <ExploreGrid />
+        <Dashboard />
+        <footer id="about" className="border-t border-white/10">
+          <div className="max-w-7xl mx-auto px-6 py-12 text-white/60 text-sm">
+            © {new Date().getFullYear()} ChainFolio — Building provenance, licensing, and trust for the creative internet.
+          </div>
+        </footer>
       </main>
     </div>
   );

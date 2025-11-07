@@ -1,186 +1,81 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileCheck, Link2, Shield, Loader2 } from 'lucide-react';
-import WorkTimeline from './WorkTimeline';
-
-function persistUpload(payload) {
-  try {
-    const key = 'chainfolio_uploads';
-    const existing = JSON.parse(localStorage.getItem(key) || '[]');
-    const next = [payload, ...existing].slice(0, 200);
-    localStorage.setItem(key, JSON.stringify(next));
-    // Broadcast for other tabs/components
-    const evt = new CustomEvent('chainfolio:event', { detail: { type: 'REGISTERED_WORK', payload } });
-    window.dispatchEvent(evt);
-  } catch {}
-}
+import { motion } from 'framer-motion';
 
 export default function Dashboard() {
-  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [type, setType] = useState('Artwork');
+  const [fileUrl, setFileUrl] = useState('');
+  const [license, setLicense] = useState('Standard License');
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ title: '', type: 'art', file: null, license: 'cc-by', url: '' });
+  const [success, setSuccess] = useState(false);
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    // Mock upload to IPFS + register to Story Protocol (placeholder behaviors for now)
-    await new Promise((r) => setTimeout(r, 1200));
-
-    const payload = {
-      id: crypto.randomUUID(),
-      title: form.title,
-      type: form.type,
-      license: form.license,
-      url: form.url?.trim() || '',
-      fileName: form.file?.name || '',
-      createdAt: Date.now(),
-    };
-    persistUpload(payload);
-
-    setOpen(true);
-    setSubmitting(false);
-    setForm({ title: '', type: 'art', file: null, license: 'cc-by', url: '' });
+    try {
+      // Simulate registration
+      await new Promise((r) => setTimeout(r, 800));
+      setSuccess(true);
+      setTitle('');
+      setFileUrl('');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <section id="dashboard" className="relative py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-white">Dashboard</h2>
-          <p className="mt-1 text-white/70">Register new works, manage licenses, and track provenance.</p>
-        </div>
+    <section id="dashboard" className="relative py-16 sm:py-24">
+      <div className="max-w-3xl mx-auto px-6">
+        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-6">Register Your Work</h2>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur lg:col-span-2">
-            <form onSubmit={onSubmit} className="space-y-5">
-              <div>
-                <label className="text-sm text-white/80">Title</label>
-                <input
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-4 py-2.5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                  placeholder="Name your creation"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-sm text-white/80">Type</label>
-                  <select
-                    value={form.type}
-                    onChange={(e) => setForm({ ...form, type: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                  >
-                    <option value="art">Art</option>
-                    <option value="music">Music</option>
-                    <option value="code">Code</option>
-                    <option value="writing">Writing</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm text-white/80">Reference URL (optional)</label>
-                  <input
-                    value={form.url}
-                    onChange={(e) => setForm({ ...form, url: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-4 py-2.5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                    placeholder="https://"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-sm text-white/80">Upload media</label>
-                  <div className="mt-1 flex items-center justify-between rounded-xl border border-dashed border-white/20 bg-black/40 p-4">
-                    <div className="flex items-center gap-3 text-white/80">
-                      <Upload className="h-5 w-5" />
-                      <span>{form.file ? form.file.name : 'Drag & drop or choose file'}</span>
-                    </div>
-                    <input
-                      type="file"
-                      className="hidden"
-                      id="file-input"
-                      onChange={(e) => setForm({ ...form, file: e.target.files?.[0] || null })}
-                    />
-                    <label htmlFor="file-input" className="cursor-pointer rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/15">Browse</label>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm text-white/80">License</label>
-                  <select
-                    value={form.license}
-                    onChange={(e) => setForm({ ...form, license: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-white/15 bg-black/40 px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                  >
-                    <option value="cc-by">CC BY</option>
-                    <option value="cc-by-sa">CC BY-SA</option>
-                    <option value="cc-by-nd">CC BY-ND</option>
-                    <option value="all-rights-reserved">All Rights Reserved</option>
-                  </select>
-                </div>
-              </div>
-
-              <motion.button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/30 ring-1 ring-white/20 transition hover:brightness-110 disabled:opacity-60"
-                whileTap={{ scale: 0.98 }}
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileCheck className="h-4 w-4" />}
-                {submitting ? 'Registering…' : 'Register work'}
-              </motion.button>
-            </form>
+        <form onSubmit={onSubmit} className="rounded-2xl p-6 bg-white/5 border border-white/10 backdrop-blur-xl space-y-4">
+          <div>
+            <label className="block text-sm text-white/70 mb-1">Title</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Neon Skyline" className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-violet-500" />
           </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur">
-            <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-cyan-300" />
-              <div>
-                <h3 className="font-medium text-white">Provenance & Licensing</h3>
-                <p className="text-sm text-white/70">Every registration is anchored on-chain via Story Protocol.</p>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-white/70 mb-1">Type</label>
+              <select value={type} onChange={(e) => setType(e.target.value)} className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white focus:outline-none">
+                <option>Artwork</option>
+                <option>Audio</option>
+                <option>Video</option>
+                <option>Code</option>
+                <option>Document</option>
+              </select>
             </div>
-            <ul className="mt-4 space-y-2 text-sm text-white/75">
-              <li>• Immutable record of ownership</li>
-              <li>• License templates for common use-cases</li>
-              <li>• IPFS-backed media storage</li>
-            </ul>
+            <div>
+              <label className="block text-sm text-white/70 mb-1">License</label>
+              <select value={license} onChange={(e) => setLicense(e.target.value)} className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white focus:outline-none">
+                <option>Standard License</option>
+                <option>CC BY‑NC</option>
+                <option>CC BY‑SA</option>
+                <option>Custom</option>
+              </select>
+            </div>
           </div>
-        </div>
+          <div>
+            <label className="block text-sm text-white/70 mb-1">File URL</label>
+            <input value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://..." className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          </div>
 
-        <div className="mt-10">
-          <WorkTimeline />
-        </div>
-      </div>
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button type="submit" disabled={submitting} className="inline-flex items-center justify-center rounded-lg px-4 py-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white font-medium disabled:opacity-60">
+              {submitting ? 'Registering…' : 'Register'}
+            </button>
+          </div>
+        </form>
 
-      <AnimatePresence>
-        {open && (
+        {success && (
           <motion.div
-            className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-200 px-4 py-3"
           >
-            <motion.div
-              className="w-full max-w-md rounded-2xl border border-white/10 bg-gradient-to-b from-white/10 to-white/[0.06] p-6 text-white backdrop-blur"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 10, opacity: 0 }}
-            >
-              <div className="mb-4 flex items-center gap-2">
-                <FileCheck className="h-5 w-5 text-emerald-300" />
-                <h4 className="font-semibold">Work registered</h4>
-              </div>
-              <p className="text-sm text-white/80">Your work has been uploaded to IPFS and registered on-chain with a {form.license.toUpperCase()} license. View it on your profile.</p>
-              <div className="mt-6 flex justify-end gap-3">
-                <a href="#profile" className="rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-sm hover:bg-white/15">Go to profile</a>
-                <button onClick={() => setOpen(false)} className="rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:brightness-110">Close</button>
-              </div>
-            </motion.div>
+            Work registered (simulated). In the full app, this would mint a license NFT and broadcast an event.
           </motion.div>
         )}
-      </AnimatePresence>
+      </div>
     </section>
   );
 }
