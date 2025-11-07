@@ -1,32 +1,17 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export function useMetamask() {
   const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [connecting, setConnecting] = useState(false);
-  const lastAttemptRef = useRef(0);
-
-  const throttledRequestAccounts = useCallback(async (eth) => {
-    const now = Date.now();
-    if (now - lastAttemptRef.current < 1500) return;
-    lastAttemptRef.current = now;
-    try {
-      setConnecting(true);
-      const reqAccs = await eth.request({ method: 'eth_requestAccounts' });
-      if (reqAccs && reqAccs.length) setAccount(reqAccs[0]);
-    } catch (_) {
-      // user may reject; we simply stop
-    } finally {
-      setConnecting(false);
-    }
-  }, []);
 
   useEffect(() => {
     const eth = typeof window !== 'undefined' ? window.ethereum : null;
     setProvider(eth ?? null);
 
     if (eth) {
+      // Read current state without triggering any popups
       eth.request({ method: 'eth_accounts' })
         .then((accs) => {
           if (accs && accs.length > 0) setAccount(accs[0]);
@@ -37,12 +22,12 @@ export function useMetamask() {
         .then((cid) => setChainId(cid))
         .catch(() => {});
 
-      const handleAccountsChanged = async (accs) => {
+      const handleAccountsChanged = (accs) => {
         if (accs && accs.length) {
           setAccount(accs[0]);
         } else {
+          // Do NOT auto-prompt. Leave it to explicit user action.
           setAccount(null);
-          await throttledRequestAccounts(eth);
         }
       };
 
@@ -58,12 +43,17 @@ export function useMetamask() {
         eth.removeListener?.('chainChanged', handleChainChanged);
       };
     }
-  }, [throttledRequestAccounts]);
+  }, []);
 
   const connect = useCallback(async () => {
     if (!provider) return { ok: false, error: 'NO_PROVIDER' };
     try {
       setConnecting(true);
+      // Always open MetaMask permission UI so the user sees a popup every time
+      await provider.request({
+        method: 'wallet_requestPermissions',
+        params: [{ eth_accounts: {} }],
+      });
       const accs = await provider.request({ method: 'eth_requestAccounts' });
       if (accs && accs.length > 0) {
         setAccount(accs[0]);
@@ -78,13 +68,10 @@ export function useMetamask() {
   }, [provider]);
 
   const disconnect = useCallback(async () => {
-    // MetaMask doesn't support programmatic disconnect; clear local state
+    // MetaMask cannot be programmatically disconnected; clear local state only
     setAccount(null);
-    if (provider) {
-      // Immediately prompt connect again per request
-      await throttledRequestAccounts(provider);
-    }
-  }, [provider, throttledRequestAccounts]);
+    // Intentionally do NOT auto-prompt here. User must click Connect to see a popup.
+  }, []);
 
   return {
     provider,
