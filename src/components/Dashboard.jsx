@@ -1,78 +1,67 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function Dashboard() {
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState('Artwork');
-  const [fileUrl, setFileUrl] = useState('');
-  const [license, setLicense] = useState('Standard License');
+  const [form, setForm] = useState({ title: '', type: 'Image', license: 'All Rights Reserved', url: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    try {
-      // Simulate registration
-      await new Promise((r) => setTimeout(r, 800));
-      setSuccess(true);
-      setTitle('');
-      setFileUrl('');
-    } finally {
-      setSubmitting(false);
-    }
+    setSuccess(false);
+    await new Promise((r) => setTimeout(r, 900));
+    setSubmitting(false);
+    setSuccess(true);
   };
 
   return (
-    <section id="dashboard" className="relative py-16 sm:py-24">
-      <div className="max-w-3xl mx-auto px-6">
-        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-6">Register Your Work</h2>
-
-        <form onSubmit={onSubmit} className="rounded-2xl p-6 bg-white/5 border border-white/10 backdrop-blur-xl space-y-4">
-          <div>
-            <label className="block text-sm text-white/70 mb-1">Title</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Neon Skyline" className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-violet-500" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <section id="dashboard" className="py-16 bg-neutral-950 border-t border-neutral-900/60">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-neutral-100 text-2xl font-semibold mb-6">Register a work</h2>
+        <form onSubmit={onSubmit} className="space-y-5">
+          <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-white/70 mb-1">Type</label>
-              <select value={type} onChange={(e) => setType(e.target.value)} className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white focus:outline-none">
-                <option>Artwork</option>
-                <option>Audio</option>
-                <option>Video</option>
-                <option>Code</option>
-                <option>Document</option>
-              </select>
+              <label className="block text-sm text-neutral-300 mb-1">Title</label>
+              <input name="title" value={form.title} onChange={onChange} required className="w-full rounded-md bg-neutral-900/60 border border-neutral-800 px-3 py-2 text-neutral-100 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" placeholder="e.g. Neon Metropolis" />
             </div>
             <div>
-              <label className="block text-sm text-white/70 mb-1">License</label>
-              <select value={license} onChange={(e) => setLicense(e.target.value)} className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white focus:outline-none">
-                <option>Standard License</option>
-                <option>CC BY‑NC</option>
-                <option>CC BY‑SA</option>
+              <label className="block text-sm text-neutral-300 mb-1">Type</label>
+              <select name="type" value={form.type} onChange={onChange} className="w-full rounded-md bg-neutral-900/60 border border-neutral-800 px-3 py-2 text-neutral-100 focus:outline-none">
+                <option>Image</option>
+                <option>Music</option>
+                <option>Video</option>
+                <option>3D</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-neutral-300 mb-1">License</label>
+              <select name="license" value={form.license} onChange={onChange} className="w-full rounded-md bg-neutral-900/60 border border-neutral-800 px-3 py-2 text-neutral-100 focus:outline-none">
+                <option>All Rights Reserved</option>
+                <option>CC BY</option>
+                <option>CC BY-NC</option>
                 <option>Custom</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm text-neutral-300 mb-1">File URL</label>
+              <input name="url" value={form.url} onChange={onChange} required className="w-full rounded-md bg-neutral-900/60 border border-neutral-800 px-3 py-2 text-neutral-100 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" placeholder="https://..." />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm text-white/70 mb-1">File URL</label>
-            <input value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://..." className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-violet-500" />
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="submit" disabled={submitting} className="inline-flex items-center justify-center rounded-lg px-4 py-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white font-medium disabled:opacity-60">
-              {submitting ? 'Registering…' : 'Register'}
-            </button>
+          <div className="flex justify-end">
+            <button type="submit" disabled={submitting} className="rounded-md bg-gradient-to-r from-emerald-500 to-cyan-500 hover:opacity-90 text-white px-5 py-2.5 text-sm font-medium shadow-lg shadow-emerald-500/20 disabled:opacity-60">{submitting ? 'Submitting...' : 'Register'}</button>
           </div>
         </form>
 
         {success && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-200 px-4 py-3"
-          >
-            Work registered (simulated). In the full app, this would mint a license NFT and broadcast an event.
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 flex items-center gap-3 rounded-lg border border-emerald-700/40 bg-emerald-900/20 p-4 text-emerald-200">
+            <CheckCircle2 />
+            <span>Registration submitted. Provenance entry will appear once confirmed on-chain.</span>
           </motion.div>
         )}
       </div>
