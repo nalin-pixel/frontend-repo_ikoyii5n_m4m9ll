@@ -1,9 +1,14 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Rocket, ShieldCheck, Wallet } from 'lucide-react';
+import { Rocket, ShieldCheck, Wallet, LogOut } from 'lucide-react';
+import { useMetamask } from './useMetamask';
+
+function shortAddress(addr) {
+  if (!addr) return '';
+  return addr.slice(0, 6) + '...' + addr.slice(-4);
+}
 
 export default function Navbar() {
-  const [connected, setConnected] = useState(false);
+  const { hasProvider, account, connecting, connect, disconnect } = useMetamask();
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur supports-[backdrop-filter]:bg-black/30 border-b border-white/10">
@@ -28,21 +33,36 @@ export default function Navbar() {
             <a href="#dashboard" className="text-white/80 hover:text-white transition">Dashboard</a>
           </nav>
 
-          <motion.button
-            onClick={() => setConnected((c) => !c)}
-            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-cyan-500/40 ${
-              connected
-                ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30 hover:bg-emerald-500/30'
-                : 'bg-white/5 text-white border-white/20 hover:bg-white/10'
-            }`}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            aria-label={connected ? 'Wallet connected' : 'Connect wallet'}
-          >
-            <Wallet className="h-4 w-4" />
-            {connected ? '0xA3...F1C' : 'Connect Wallet'}
-          </motion.button>
+          {!hasProvider ? (
+            <span className="rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">Install MetaMask</span>
+          ) : account ? (
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1.5 text-sm text-emerald-200">
+                {shortAddress(account)}
+              </span>
+              <motion.button
+                onClick={disconnect}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-sm text-white hover:bg-white/10"
+                whileTap={{ scale: 0.98 }}
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Disconnect</span>
+              </motion.button>
+            </div>
+          ) : (
+            <motion.button
+              onClick={connect}
+              disabled={connecting}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 disabled:opacity-60"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              aria-label={connecting ? 'Connecting' : 'Connect wallet'}
+            >
+              <Wallet className="h-4 w-4" />
+              {connecting ? 'Connecting…' : 'Connect Wallet'}
+            </motion.button>
+          )}
         </div>
 
         <div className="md:hidden mt-3 mb-3 flex items-center gap-4 text-sm">
