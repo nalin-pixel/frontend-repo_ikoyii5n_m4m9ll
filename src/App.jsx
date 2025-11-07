@@ -1,27 +1,19 @@
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import ExploreGrid from './components/ExploreGrid';
-import Dashboard from './components/Dashboard';
-
-function BackgroundFX() {
-  return (
-    <div className="pointer-events-none fixed inset-0 z-0">
-      <div className="absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(0,150,255,0.15),transparent)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(60%_40%_at_80%_10%,rgba(99,102,241,0.12),transparent)]" />
-      <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,.4), transparent 30%)' }} />
-    </div>
-  );
-}
+import React from 'react';
+import Navbar from './components/Navbar.jsx';
+import Hero from './components/Hero.jsx';
+import ExploreGrid from './components/ExploreGrid.jsx';
+import Dashboard from './components/Dashboard.jsx';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-black text-white">
-      <BackgroundFX />
+    <div className="min-h-screen bg-neutral-950 text-white">
       <Navbar />
-      <main>
+      <main className="relative">
         <Hero />
-        <ExploreGrid />
-        <Dashboard />
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+          <ExploreGrid />
+          <Dashboard />
+        </section>
       </main>
     </div>
   );
