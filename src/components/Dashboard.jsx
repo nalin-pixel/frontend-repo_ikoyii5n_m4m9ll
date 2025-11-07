@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileCheck, Link2, Shield, Loader2 } from 'lucide-react';
+import WorkTimeline from './WorkTimeline';
 
 export default function Dashboard() {
   const [open, setOpen] = useState(false);
@@ -121,6 +122,10 @@ export default function Dashboard() {
               <li>• IPFS-backed media storage</li>
             </ul>
           </div>
+        </div>
+
+        <div className="mt-10">
+          <WorkTimeline />
         </div>
       </div>
 

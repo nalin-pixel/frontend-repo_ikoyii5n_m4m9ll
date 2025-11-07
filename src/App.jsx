@@ -2,7 +2,6 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ExploreGrid from './components/ExploreGrid';
 import Dashboard from './components/Dashboard';
-import Footer from './components/Footer';
 
 function BackgroundFX() {
   return (
@@ -24,7 +23,6 @@ export default function App() {
         <ExploreGrid />
         <Dashboard />
       </main>
-      <Footer />
     </div>
   );
 }
